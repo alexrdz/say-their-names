@@ -408,7 +408,7 @@
       var sep = document.createElement('span');
       sep.className = 'dialog-meta__sep';
       sep.setAttribute('aria-hidden', 'true');
-      sep.textContent = '\u00b7';
+      sep.textContent = '/';
       dialogMetaEl.appendChild(sep);
 
       var ageSpan = document.createElement('span');
