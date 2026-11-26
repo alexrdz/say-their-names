@@ -31,6 +31,7 @@
   </div>
 
   <header class="site-chrome site-chrome--top">
+    <h1 class="site-title">Say their names</h1>
     <button
       type="button"
       id="theme-toggle"
@@ -50,7 +51,7 @@
 
   <main class="stage" id="stage" aria-label="Memorial name display">
     <div class="name-presence" id="name-presence" data-phase="hidden">
-      <h1 class="name-display" id="name-display" aria-live="polite" aria-atomic="true"></h1>
+      <h2 class="name-display" id="name-display" aria-live="polite" aria-atomic="true"></h2>
 
       <div class="indicator-slot">
         <span class="indicator-stem" aria-hidden="true"></span>
@@ -168,22 +169,48 @@
   </main>
 
   <footer class="site-chrome site-chrome--bottom">
-    <button
-      type="button"
-      id="playback-toggle"
-      class="playback-btn"
-      aria-pressed="false"
-      aria-label="Pause name display"
-    >
-      <svg class="icon icon--pause" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">
-        <line x1="8" y1="5" x2="8" y2="19"></line>
-        <line x1="16" y1="5" x2="16" y2="19"></line>
-      </svg>
-      <svg class="icon icon--play" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
-        <polygon points="7 5 19 12 7 19 7 5"></polygon>
-      </svg>
-      <span id="playback-label">Pause</span>
-    </button>
+    <div class="playback-controls" role="group" aria-label="Memorial playback controls">
+      <button
+        type="button"
+        id="prev-btn"
+        class="icon-btn icon-btn--nav"
+        aria-label="Previous name"
+        title="Previous name (Left Arrow)"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        id="playback-toggle"
+        class="playback-btn"
+        aria-pressed="false"
+        aria-label="Pause name display"
+      >
+        <svg class="icon icon--pause" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">
+          <line x1="8" y1="5" x2="8" y2="19"></line>
+          <line x1="16" y1="5" x2="16" y2="19"></line>
+        </svg>
+        <svg class="icon icon--play" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+          <polygon points="7 5 19 12 7 19 7 5"></polygon>
+        </svg>
+        <span id="playback-label">Pause</span>
+      </button>
+
+      <button
+        type="button"
+        id="next-btn"
+        class="icon-btn icon-btn--nav"
+        aria-label="Next name"
+        title="Next name (Right Arrow)"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
   </footer>
 
   <dialog

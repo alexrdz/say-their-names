@@ -232,15 +232,17 @@
   var reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   function getTimings() {
     if (reducedMotionQuery.matches) {
-      return { fadeIn: 150, hold: 6000, fadeOut: 150, gap: 400, resumeHold: 2400, dialogFade: 10 };
+      return { fadeIn: 150, hold: 6000, fadeOut: 150, gap: 400, resumeHold: 2400, stepOut: 10, stepIn: 10, dialogFade: 10 };
     }
-    return { fadeIn: 1500, hold: 4500, fadeOut: 1500, gap: 600, resumeHold: 2000, dialogFade: 280 };
+    return { fadeIn: 1500, hold: 4500, fadeOut: 1500, gap: 600, resumeHold: 2000, stepOut: 220, stepIn: 380, dialogFade: 280 };
   }
 
   /* DOM references */
   var presenceEl = document.getElementById('name-presence');
   var nameEl = document.getElementById('name-display');
   var contextTrigger = document.getElementById('context-trigger');
+  var prevBtn = document.getElementById('prev-btn');
+  var nextBtn = document.getElementById('next-btn');
   var playbackToggle = document.getElementById('playback-toggle');
   var playbackLabel = document.getElementById('playback-label');
   var themeToggle = document.getElementById('theme-toggle');
@@ -257,8 +259,10 @@
   /* State */
   var queue = [];
   var queueIndex = -1;
+  var history = [];
+  var historyIndex = -1;
   var currentEntry = null;
-  var phase = 'hidden'; // 'hidden' | 'fading-in' | 'holding' | 'fading-out' | 'gap' | 'paused'
+  var phase = 'hidden'; // 'hidden' | 'fading-in' | 'holding' | 'fading-out' | 'gap' | 'paused' | 'stepping'
   var isPaused = false;
   var isDialogOpen = false;
   var isDialogClosing = false;
@@ -281,13 +285,51 @@
     return copy;
   }
 
-  function nextEntry() {
+  function pullFromQueue() {
     queueIndex += 1;
     if (queueIndex >= queue.length) {
       queue = shuffle(ENTRIES, currentEntry);
       queueIndex = 0;
     }
     return queue[queueIndex];
+  }
+
+  function nextEntry() {
+    if (historyIndex < history.length - 1) {
+      historyIndex += 1;
+      return history[historyIndex];
+    }
+    var entry = pullFromQueue();
+    history.push(entry);
+    if (history.length > 100) {
+      history.shift();
+    }
+    historyIndex = history.length - 1;
+    return entry;
+  }
+
+  function prevEntry() {
+    if (historyIndex > 0) {
+      historyIndex -= 1;
+      return history[historyIndex];
+    }
+    /* At start of history: pull from the unvisited tail of the queue so Left always steps cleanly */
+    var entry = null;
+    for (var i = queue.length - 1; i > queueIndex; i--) {
+      if (!currentEntry || queue[i].name !== currentEntry.name) {
+        entry = queue.splice(i, 1)[0];
+        break;
+      }
+    }
+    if (!entry) {
+      entry = pullFromQueue();
+    }
+    history.unshift(entry);
+    if (history.length > 100) {
+      history.pop();
+    }
+    historyIndex = 0;
+    return entry;
   }
 
   function clearTimer() {
@@ -506,8 +548,44 @@
     syncThemeUI();
   }
 
+  function stepTo(direction) {
+    if (isDialogOpen) return;
+    clearTimer();
+
+    var entry = direction < 0 ? prevEntry() : nextEntry();
+    var t = getTimings();
+
+    phase = 'stepping';
+    presenceEl.dataset.phase = 'stepping-out';
+
+    timerId = window.setTimeout(function () {
+      renderEntry(entry);
+      presenceEl.dataset.phase = 'hidden';
+      contextTrigger.disabled = false;
+      void presenceEl.offsetWidth;
+
+      presenceEl.dataset.phase = 'stepping-in';
+
+      if (isPaused) {
+        phase = 'paused';
+        return;
+      }
+
+      timerId = window.setTimeout(function () {
+        phase = 'holding';
+        timerId = window.setTimeout(beginFadeOut, t.hold);
+      }, t.stepIn);
+    }, t.stepOut);
+  }
+
   /* Event Listeners */
   contextTrigger.addEventListener('click', openContext);
+  prevBtn.addEventListener('click', function () {
+    stepTo(-1);
+  });
+  nextBtn.addEventListener('click', function () {
+    stepTo(1);
+  });
 
   playbackToggle.addEventListener('click', function () {
     if (isDialogOpen) {
@@ -537,9 +615,22 @@
     closeContextAndContinue();
   });
 
-  /* Space bar toggles pause/continue when not inside the dialog or on a button */
+  /* Keyboard controls when dialog is closed */
   document.addEventListener('keydown', function (event) {
     if (isDialogOpen) return;
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      stepTo(-1);
+      return;
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      stepTo(1);
+      return;
+    }
+
     if (event.code === 'Space' && event.target === document.body) {
       event.preventDefault();
       if (isPaused) {
